@@ -1,0 +1,79 @@
+swagger: "2.0"
+info:
+  title: "E-Commerce API"
+  version: "1.0"
+
+paths:
+  /signup:
+    post:
+      summary: "User Signup"
+      operationId: "Signup"
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      responses:
+        200:
+          description: "User signed up successfully"
+
+  /login:
+    post:
+      summary: "User Login"
+      operationId: "Login"
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      responses:
+        200:
+          description: "User logged in successfully"
+
+  /products:
+    get:
+      summary: "Get Products"
+      operationId: "GetProducts"
+      produces:
+        - application/json
+      responses:
+        200:
+          description: "List of products"
+    post:
+      summary: "Add Product"
+      operationId: "AddProduct"
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      responses:
+        200:
+          description: "Product added successfully"
+
+  /orders:
+    get:
+      summary: "Get Orders"
+      operationId: "GetOrders"
+      produces:
+        - application/json
+      responses:
+        200:
+          description: "List of orders"
+    post:
+      summary: "Create Order"
+      operationId: "CreateOrder"
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      responses:
+        200:
+          description: "Order created successfully"
+
+  /recommend:
+    get:
+      summary: "Get Recommendations"
+      operationId: "GetRecommendations"
+      produces:
+        - application/json
+      responses:
+        200:
+          description: "List of product recommendations"
