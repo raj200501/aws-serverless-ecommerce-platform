@@ -1,27 +1,30 @@
-import boto3
 import json
-from datetime import datetime
+from pathlib import Path
+import sys
+from uuid import UUID
+
+ROOT = Path(__file__).resolve().parents[2]
+sys.path.append(str(ROOT / "src"))
+
+from ecommerce_platform.config import load_settings
+from ecommerce_platform.db import init_db
+from ecommerce_platform.services import EcommerceService, ValidationError
+
 
 def lambda_handler(event, context):
-    dynamodb = boto3.resource('dynamodb')
-    table = dynamodb.Table('Orders')
+    settings = load_settings()
+    db = init_db(settings)
+    service = EcommerceService(settings=settings, db=db)
 
-    order_id = event['order_id']
-    user_id = event['user_id']
-    product_ids = event['product_ids']
-    total_price = event['total_price']
-
-    table.put_item(
-        Item={
-            'OrderID': order_id,
-            'UserID': user_id,
-            'ProductIDs': product_ids,
-            'TotalPrice': total_price,
-            'CreatedAt': datetime.utcnow().isoformat()
-        }
-    )
+    try:
+        order = service.create_order(
+            user_id=UUID(event["user_id"]),
+            items=[(UUID(item["product_id"]), int(item["quantity"])) for item in event["items"]],
+        )
+    except (ValidationError, KeyError, ValueError) as exc:
+        return {"statusCode": 400, "body": json.dumps({"error": str(exc)})}
 
     return {
-        'statusCode': 200,
-        'body': json.dumps('Order created successfully')
+        "statusCode": 200,
+        "body": json.dumps({"order_id": str(order.id), "total_cents": order.total_cents}),
     }

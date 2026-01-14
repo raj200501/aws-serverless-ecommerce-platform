@@ -2,57 +2,57 @@ service: serverless-ecommerce-platform
 
 provider:
   name: aws
-  runtime: python3.8
+  runtime: python3.11
   region: us-east-1
 
 functions:
   signup:
-    handler: backend/lambda_functions/authentication/signup.lambda_handler
+    handler: lambda_functions/authentication/signup.lambda_handler
     events:
       - http:
-          path: signup
+          path: auth/signup
           method: post
 
   login:
-    handler: backend/lambda_functions/authentication/login.lambda_handler
+    handler: lambda_functions/authentication/login.lambda_handler
     events:
       - http:
-          path: login
+          path: auth/login
           method: post
 
   addProduct:
-    handler: backend/lambda_functions/product_management/add_product.lambda_handler
+    handler: lambda_functions/product_management/add_product.lambda_handler
     events:
       - http:
           path: products
           method: post
 
   getProducts:
-    handler: backend/lambda_functions/product_management.get_products.lambda_handler
+    handler: lambda_functions/product_management/get_products.lambda_handler
     events:
       - http:
           path: products
           method: get
 
   createOrder:
-    handler: backend/lambda_functions/order_processing/create_order.lambda_handler
+    handler: lambda_functions/order_processing/create_order.lambda_handler
     events:
       - http:
           path: orders
           method: post
 
   getOrders:
-    handler: backend/lambda_functions/order_processing/get_orders.lambda_handler
+    handler: lambda_functions/order_processing/get_orders.lambda_handler
     events:
       - http:
-          path: orders
+          path: orders/{user_id}
           method: get
 
   recommend:
-    handler: backend/lambda_functions/recommendation_system/recommend.lambda_handler
+    handler: lambda_functions/recommendation_system/recommend.lambda_handler
     events:
       - http:
-          path: recommend
+          path: recommendations/{user_id}
           method: get
 
 resources:

@@ -2,78 +2,272 @@ swagger: "2.0"
 info:
   title: "E-Commerce API"
   version: "1.0"
+  description: "Local API contract for the serverless e-commerce platform."
+
+schemes:
+  - http
+
+consumes:
+  - application/json
+produces:
+  - application/json
 
 paths:
-  /signup:
+  /health:
+    get:
+      summary: "Health check"
+      responses:
+        200:
+          description: "Service status"
+
+  /auth/signup:
     post:
       summary: "User Signup"
       operationId: "Signup"
-      consumes:
-        - application/json
-      produces:
-        - application/json
+      parameters:
+        - in: body
+          name: payload
+          required: true
+          schema:
+            $ref: "#/definitions/SignupRequest"
       responses:
         200:
           description: "User signed up successfully"
+          schema:
+            $ref: "#/definitions/UserResponse"
 
-  /login:
+  /auth/login:
     post:
       summary: "User Login"
       operationId: "Login"
-      consumes:
-        - application/json
-      produces:
-        - application/json
+      parameters:
+        - in: body
+          name: payload
+          required: true
+          schema:
+            $ref: "#/definitions/LoginRequest"
       responses:
         200:
           description: "User logged in successfully"
+          schema:
+            $ref: "#/definitions/LoginResponse"
 
   /products:
     get:
       summary: "Get Products"
       operationId: "GetProducts"
-      produces:
-        - application/json
       responses:
         200:
           description: "List of products"
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/Product"
     post:
       summary: "Add Product"
       operationId: "AddProduct"
-      consumes:
-        - application/json
-      produces:
-        - application/json
+      parameters:
+        - in: body
+          name: payload
+          required: true
+          schema:
+            $ref: "#/definitions/ProductCreate"
       responses:
         200:
           description: "Product added successfully"
+          schema:
+            $ref: "#/definitions/Product"
 
   /orders:
-    get:
-      summary: "Get Orders"
-      operationId: "GetOrders"
-      produces:
-        - application/json
-      responses:
-        200:
-          description: "List of orders"
     post:
       summary: "Create Order"
       operationId: "CreateOrder"
-      consumes:
-        - application/json
-      produces:
-        - application/json
+      parameters:
+        - in: body
+          name: payload
+          required: true
+          schema:
+            $ref: "#/definitions/OrderCreate"
       responses:
         200:
           description: "Order created successfully"
+          schema:
+            $ref: "#/definitions/Order"
 
-  /recommend:
+  /orders/{user_id}:
+    get:
+      summary: "Get Orders"
+      operationId: "GetOrders"
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          type: string
+      responses:
+        200:
+          description: "List of orders"
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/Order"
+
+  /recommendations/{user_id}:
     get:
       summary: "Get Recommendations"
       operationId: "GetRecommendations"
-      produces:
-        - application/json
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          type: string
       responses:
         200:
           description: "List of product recommendations"
+          schema:
+            $ref: "#/definitions/Recommendation"
+
+definitions:
+  SignupRequest:
+    type: object
+    required:
+      - email
+      - username
+      - password
+    properties:
+      email:
+        type: string
+      username:
+        type: string
+      password:
+        type: string
+
+  UserResponse:
+    type: object
+    properties:
+      id:
+        type: string
+      email:
+        type: string
+      username:
+        type: string
+      created_at:
+        type: string
+
+  LoginRequest:
+    type: object
+    required:
+      - username
+      - password
+    properties:
+      username:
+        type: string
+      password:
+        type: string
+
+  LoginResponse:
+    type: object
+    properties:
+      user_id:
+        type: string
+      token:
+        type: string
+      expires_in_minutes:
+        type: integer
+
+  ProductCreate:
+    type: object
+    required:
+      - name
+      - description
+      - category
+      - price_cents
+    properties:
+      name:
+        type: string
+      description:
+        type: string
+      category:
+        type: string
+      price_cents:
+        type: integer
+      currency:
+        type: string
+
+  Product:
+    type: object
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+      description:
+        type: string
+      category:
+        type: string
+      price_cents:
+        type: integer
+      currency:
+        type: string
+      created_at:
+        type: string
+
+  OrderItem:
+    type: object
+    properties:
+      product_id:
+        type: string
+      quantity:
+        type: integer
+      price_cents:
+        type: integer
+
+  OrderCreate:
+    type: object
+    required:
+      - user_id
+      - items
+    properties:
+      user_id:
+        type: string
+      items:
+        type: array
+        items:
+          type: object
+          required:
+            - product_id
+            - quantity
+          properties:
+            product_id:
+              type: string
+            quantity:
+              type: integer
+
+  Order:
+    type: object
+    properties:
+      id:
+        type: string
+      user_id:
+        type: string
+      status:
+        type: string
+      total_cents:
+        type: integer
+      currency:
+        type: string
+      created_at:
+        type: string
+      items:
+        type: array
+        items:
+          $ref: "#/definitions/OrderItem"
+
+  Recommendation:
+    type: object
+    properties:
+      user_id:
+        type: string
+      products:
+        type: array
+        items:
+          $ref: "#/definitions/Product"
