@@ -1,27 +1,32 @@
-import boto3
 import json
-from datetime import datetime
+from pathlib import Path
+import sys
+
+ROOT = Path(__file__).resolve().parents[2]
+sys.path.append(str(ROOT / "src"))
+
+from ecommerce_platform.config import load_settings
+from ecommerce_platform.db import init_db
+from ecommerce_platform.services import EcommerceService, ValidationError
+
 
 def lambda_handler(event, context):
-    dynamodb = boto3.resource('dynamodb')
-    table = dynamodb.Table('Products')
+    settings = load_settings()
+    db = init_db(settings)
+    service = EcommerceService(settings=settings, db=db)
 
-    product_id = event['product_id']
-    name = event['name']
-    price = event['price']
-    category = event['category']
-
-    table.put_item(
-        Item={
-            'ProductID': product_id,
-            'Name': name,
-            'Price': price,
-            'Category': category,
-            'CreatedAt': datetime.utcnow().isoformat()
-        }
-    )
+    try:
+        product = service.create_product(
+            name=event["name"],
+            description=event["description"],
+            category=event["category"],
+            price_cents=int(event["price_cents"]),
+            currency=event.get("currency", "USD"),
+        )
+    except ValidationError as exc:
+        return {"statusCode": 400, "body": json.dumps({"error": str(exc)})}
 
     return {
-        'statusCode': 200,
-        'body': json.dumps('Product added successfully')
+        "statusCode": 200,
+        "body": json.dumps({"product_id": str(product.id)}),
     }

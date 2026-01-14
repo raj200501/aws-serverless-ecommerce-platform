@@ -1,46 +1,31 @@
-import boto3
+"""Local auth setup (demo user)."""
 
-def create_user_pool():
-    client = boto3.client('cognito-idp')
+from pathlib import Path
+import sys
 
-    response = client.create_user_pool(
-        PoolName='ECommerceUserPool',
-        Policies={
-            'PasswordPolicy': {
-                'MinimumLength': 8,
-                'RequireUppercase': True,
-                'RequireLowercase': True,
-                'RequireNumbers': True,
-                'RequireSymbols': False
-            }
-        },
-        AutoVerifiedAttributes=[
-            'email'
-        ]
-    )
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.append(str(ROOT / "src"))
 
-    user_pool_id = response['UserPool']['Id']
-    return user_pool_id
+from ecommerce_platform.auth import hash_password
+from ecommerce_platform.config import load_settings
+from ecommerce_platform.db import init_db
+from ecommerce_platform.services import EcommerceService
 
-def create_user_pool_client(user_pool_id):
-    client = boto3.client('cognito-idp')
 
-    response = client.create_user_pool_client(
-        UserPoolId=user_pool_id,
-        ClientName='ECommerceUserPoolClient',
-        GenerateSecret=False,
-        ExplicitAuthFlows=[
-            'ALLOW_USER_PASSWORD_AUTH',
-            'ALLOW_REFRESH_TOKEN_AUTH'
-        ]
-    )
+if __name__ == "__main__":
+    settings = load_settings()
+    db = init_db(settings)
+    service = EcommerceService(settings=settings, db=db)
 
-    client_id = response['UserPoolClient']['ClientId']
-    return client_id
-
-if __name__ == '__main__':
-    user_pool_id = create_user_pool()
-    print("User pool created successfully")
-
-    client_id = create_user_pool_client(user_pool_id)
-    print("User pool client created successfully")
+    password_hash, salt = hash_password("password123")
+    try:
+        service.create_user(
+            email="demo@example.com",
+            username="demo",
+            password_hash=password_hash,
+            password_salt=salt,
+        )
+    except Exception:
+        print("Demo user already exists")
+    else:
+        print("Created demo user: demo / password123")
